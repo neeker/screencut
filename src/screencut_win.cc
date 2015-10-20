@@ -95,7 +95,9 @@ int _tmain(int argc, TCHAR **argv) {
 
     if ((pScreenCut->GetFinishStatus() == FINISH_SAVE && save_rule == SAVE_FILE) || pScreenCut->GetFinishStatus() == FINISH_SAVEAS) {
       strJson.Append(_T(",\"file\":\""));
-      strJson.Append(pScreenCut->GetImageSavedFilePath());
+      CString strTempJsonPath = pScreenCut->GetImageSavedFilePath();
+      strTempJsonPath.Replace(_T("\\"), _T("\\\\"));
+      strJson.Append(strTempJsonPath);
       strJson.Append(_T("\""));
     } else if (pScreenCut->GetFinishStatus() == FINISH_SAVE && save_rule == SAVE_CLIPBOARD) {
       strJson.Append(_T(",\"clipboard\":true"));
