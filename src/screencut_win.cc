@@ -56,7 +56,7 @@ int _tmain(int argc, TCHAR **argv) {
       }
     }
     if (filetype_filter_index == -1) {
-      wprintf(_T("{'status':'error','messsage':'filetype(%s) not support'}"), lpFileType);
+      wprintf(_T("{\"status\":\"error\",\"messsage\":\"filetype(%s) not support\"}"), lpFileType);
       return 0;
     }
   }
@@ -76,7 +76,7 @@ int _tmain(int argc, TCHAR **argv) {
   if (open_console) {
 #endif
     CString strJson;
-    strJson.Append(_T("{'status':'"));
+    strJson.Append(_T("{\"status\":\""));
     switch (pScreenCut->GetFinishStatus()) {
     case FINISH_SAVE:
       strJson.Append(_T("save"));
@@ -91,14 +91,14 @@ int _tmain(int argc, TCHAR **argv) {
       strJson.Append(_T("error"));
       break;
     }
-    strJson.Append(_T("'"));
+    strJson.Append(_T("\""));
 
     if ((pScreenCut->GetFinishStatus() == FINISH_SAVE && save_rule == SAVE_FILE) || pScreenCut->GetFinishStatus() == FINISH_SAVEAS) {
-      strJson.Append(_T(",'file':'"));
+      strJson.Append(_T(",\"file\":\""));
       strJson.Append(pScreenCut->GetImageSavedFilePath());
-      strJson.Append(_T("'"));
+      strJson.Append(_T("\""));
     } else if (pScreenCut->GetFinishStatus() == FINISH_SAVE && save_rule == SAVE_CLIPBOARD) {
-      strJson.Append(_T(",'clipboard':true"));
+      strJson.Append(_T(",\"clipboard\":true"));
     }
     strJson.Append(_T("}"));
     wprintf(_T("%s"), strJson);
