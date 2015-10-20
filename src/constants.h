@@ -24,8 +24,9 @@ const double PI = 3.1415926;
 
 
 //filter name
-const TCHAR* const  FILTERNAME_ARR[] = {_T(".bmp"),_T(".jpg"),_T(".png")};
-const TCHAR* const  ENCODERFORMART_ARR[] = {_T("image/bmp"),_T("image/jpeg"),_T("image/png")};
+const TCHAR* const  FILTERNAME_ARR[] = {_T(".jpg"),_T(".png"), _T(".bmp")};
+const TCHAR* const  ENCODERFORMART_ARR[] = {_T("image/jpeg"),_T("image/png"), _T("image/bmp")};
+const int FILERNAMES_LEN = 3;
 
 //color
 const COLORREF PEN_COLOR[] = {

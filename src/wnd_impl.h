@@ -41,6 +41,9 @@ namespace ui {
 
     BOOL CurPosInWindow(void);
 
+    virtual BOOL IsDesotryByWindow(void);
+    virtual void SetDesotryByWindow(BOOL value);
+
   public:
     HICON  m_hIcon_Big;
     HICON  m_hIcon_Small;
@@ -48,6 +51,7 @@ namespace ui {
   protected:
     BOOL  m_bFocused;
     BOOL  m_bDelInDestructor;
+    BOOL  m_bDesotryByWindow;
 
   protected:
     HWND    m_hWnd;

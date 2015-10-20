@@ -52,12 +52,13 @@ set_source_files_properties(${SCREENCUT_SOURCES}}
 
 list(APPEND SCREENCUT_SOURCES ${SCREENCUT_PRECOMPILED_SOURCE})
 
-add_executable(screencut WIN32
+#add_executable(screencut WIN32
+add_executable(screencut 
   ${SCREENCUT_HEADERS}
   ${SCREENCUT_SOURCES}
   ${SCREENCUT_RESOURCES}
 )
-set_target_properties(screencut PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+#set_target_properties(screencut PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 
 target_link_libraries(screencut gdiplus comctl32)
 

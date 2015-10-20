@@ -36,6 +36,11 @@ namespace ui {
 
     m_nPenWidth = 1;
     m_dwPenColor = RGB(255, 0, 0);
+
+    m_emFinishStatus = FINISH_CANCEL;
+    m_emSaveRule = SAVE_FILE;
+
+    m_nDefaultFilterIndex = 0;
   }
 
   CScreenCutWnd::~CScreenCutWnd() {
@@ -67,7 +72,7 @@ namespace ui {
     if (m_pToolWnd && !::IsWindow(m_pToolWnd->GetSafeHwnd())) {
       delete m_pToolWnd;
       m_pToolWnd = NULL;
-    } 
+    }
     if (!m_pToolWnd) {
       m_pToolWnd = new CToolWnd();
       m_pToolWnd->Create(GetSafeHwnd(), _T("ToolMenu"), WS_POPUP, WS_EX_TOPMOST | WS_EX_TOOLWINDOW, TOOLWND_RC);
@@ -358,7 +363,7 @@ namespace ui {
     CString strDefName;
     SetDefFileName(strDefName);
 
-    int nFilterIndex = 1;  //¹ýÂËÆ÷Ë÷Òý
+    int nFilterIndex = m_nDefaultFilterIndex + 1;  //¹ýÂËÆ÷Ë÷Òý
     TCHAR* szDefPath = new TCHAR[MAX_PATH];
     TCHAR* szDefTitle = new TCHAR[MAX_PATH];
 
@@ -378,10 +383,10 @@ namespace ui {
       CString strFileName = szDefPath;
       strFileName += FILTERNAME_ARR[nFilterIndex - 1];
 
-      bSuccess = SaveAsPic(hSaveBMP, strFileName, ENCODERFORMART_ARR[nFilterIndex - 1]);
-
+      if (bSuccess = SaveAsPic(hSaveBMP, strFileName, ENCODERFORMART_ARR[nFilterIndex - 1])) {
+        m_strImageFilePath = strFileName;
+      }
       DeleteObject(hSaveBMP);
-
     }
 
     delete[] szDefTitle;
@@ -393,16 +398,30 @@ namespace ui {
   }
 
   void CScreenCutWnd::Finish() {
-    HBITMAP hCopyBMP = CreateCompatibleBitmap(m_hMemCurScrnDC, abs(m_rcSel.GetW()), abs(m_rcSel.GetH()));
-    HBITMAP hOldCopyBMP = (HBITMAP)SelectObject(m_hMemDC, hCopyBMP);
+    m_emFinishStatus = FINISH_ERROR;
+    HBITMAP hSaveBMP = CreateCompatibleBitmap(m_hMemCurScrnDC, abs(m_rcSel.GetW()), abs(m_rcSel.GetH()));
+    HBITMAP hOldCopyBMP = (HBITMAP)SelectObject(m_hMemDC, hSaveBMP);
     RectX rcTempSel(0, 0, abs(m_rcSel.GetW()), abs(m_rcSel.GetH())); //from zero point
     BitBltEx(m_hMemDC, rcTempSel, m_hMemCurScrnDC, m_rcSel.GetStartPoint(), SRCCOPY | CAPTUREBLT);
     ::SelectObject(m_hMemDC, hOldCopyBMP);
+    if (SAVE_CLIPBOARD == m_emSaveRule) {
+      m_emFinishStatus = CopyBMP2Clipboard(hSaveBMP, GetSafeHwnd()) ? FINISH_SAVE : FINISH_ERROR;
+    } else {
+      TCHAR lpTempPathBuffer[MAX_PATH];
+      m_strImageFilePath.Empty();
 
-    if (CopyBMP2Clipboard(hCopyBMP, GetSafeHwnd())) {
-      SendMessage(WM_CLOSE);
+      ZeroMemory(lpTempPathBuffer, MAX_PATH);
+      SetDefFileName(m_strImageFilePath);
+      m_strImageFilePath += FILTERNAME_ARR[m_nDefaultFilterIndex];
+
+      GetTempPath(MAX_PATH, lpTempPathBuffer);
+      m_strImageFilePath.Insert(0, lpTempPathBuffer);
+
+      m_emFinishStatus = SaveAsPic(hSaveBMP, m_strImageFilePath, ENCODERFORMART_ARR[m_nDefaultFilterIndex]) ?
+        FINISH_SAVE : FINISH_ERROR;
     }
-    DeleteObject(hCopyBMP);
+    SendMessage(WM_CLOSE);
+    DeleteObject(hSaveBMP);
   }
 
   void CScreenCutWnd::ClearUndoStack() {
@@ -833,6 +852,7 @@ namespace ui {
     ACTION emTempAction = m_emAction;
     m_emAction = ACTION_SAVE;
     if (Save()) {
+      m_emFinishStatus = FINISH_SAVEAS;
       SendMessage(WM_CLOSE);
     } else {
       m_emAction = emTempAction;
@@ -1192,7 +1212,7 @@ namespace ui {
     ofn.hInstance = hInstance;
     ofn.lpstrFile = szFilePath;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = TEXT("BMP (*.bmp)\0*.bmp\0JPEG (*.jpg)\0*.jpg\0PNG (*.png)\0*.png\0\0");
+    ofn.lpstrFilter = TEXT("JPEG (*.jpg)\0*.jpg\0PNG (*.png)\0*.png\0\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = szFileTitle;
     ofn.nMaxFileTitle = MAX_PATH;
@@ -1212,13 +1232,13 @@ namespace ui {
   void CScreenCutWnd::GetCurTimeString(CString& strCurDateTime) {
     SYSTEMTIME systime;
     GetLocalTime(&systime);
-    strCurDateTime.Format(_T("%4d%02d%02d%02d%02d%02d"),
+    strCurDateTime.Format(_T("%4d%02d%02d%02d%02d%02d%03d"),
                         systime.wYear, systime.wMonth, systime.wDay,
-                        systime.wHour, systime.wMinute, systime.wSecond);
+                        systime.wHour, systime.wMinute, systime.wSecond, systime.wMilliseconds);
   }
 
   void CScreenCutWnd::SetDefFileName(CString& strDefName) {
-    strDefName = _T("½ØÍ¼");
+    strDefName = _T("screen");
     CString strTime;
     GetCurTimeString(strTime);
     strDefName.Append(strTime);
@@ -1412,5 +1432,22 @@ namespace ui {
     Gdiplus::GdiplusShutdown(tokenGDIPlus);
 
     return bRes;
+  }
+
+  FINISH_STATUS CScreenCutWnd::GetFinishStatus(void) const {
+    return m_emFinishStatus;
+  }
+
+  void CScreenCutWnd::SetSaveRule(SAVE_RULE value) {
+    m_emSaveRule = value;
+  }
+
+
+  const CString & CScreenCutWnd::GetImageSavedFilePath() const {
+    return m_strImageFilePath;
+  }
+
+  void CScreenCutWnd::SetDefaultFilterIndex(int filter_index) {
+    m_nDefaultFilterIndex = filter_index;
   }
 }

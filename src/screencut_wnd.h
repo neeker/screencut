@@ -37,6 +37,20 @@ namespace ui {
     STRETCH_RD
   }STRETCH;
 
+  //完成状态
+  typedef enum {
+    FINISH_SAVE,
+    FINISH_SAVEAS,
+    FINISH_ERROR,
+    FINISH_CANCEL,
+  }FINISH_STATUS;
+
+  //保存规则
+  typedef enum {
+    SAVE_FILE,
+    SAVE_CLIPBOARD,
+  }SAVE_RULE;
+
   class CWndImpl;
   class CToolWnd;
   class CColorWnd;
@@ -116,6 +130,14 @@ namespace ui {
     void ClearUndoStack(void);
     void ClearRedoStack(void);
 
+    FINISH_STATUS GetFinishStatus(void) const;
+
+    void SetSaveRule(SAVE_RULE value);
+ 
+    const CString & GetImageSavedFilePath() const;
+
+    void SetDefaultFilterIndex(int filter_index);
+
     //@brief  API rewriting
     static BOOL BitBltEx(HDC hDestDC, RectX rc, HDC hSrcDC, POINT ptStart, DWORD dwRop);
     static int  DrawTextEx(HDC hDC, const CString& strTx, RectX rc, UINT uFormat);
@@ -166,8 +188,6 @@ namespace ui {
     //@brief  拷至剪贴板
     static BOOL CopyBMP2Clipboard(HBITMAP hBMP, HWND hWnd);
 
-
-
   private:
 
     HDC  m_hClientDC;       //屏幕DC，展示截屏过程
@@ -208,6 +228,10 @@ namespace ui {
     int m_nPenWidth;
     COLORREF m_dwPenColor;
 
+    FINISH_STATUS m_emFinishStatus; //完成状态
+    SAVE_RULE m_emSaveRule; //保存规则（文件或剪切板）
+    CString m_strImageFilePath; //文件路径
+    int m_nDefaultFilterIndex;
   private:
     static HCURSOR m_hCursor;
     static std::vector<RectX> m_vecAllWndRect;

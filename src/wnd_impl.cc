@@ -15,7 +15,8 @@ namespace ui {
     m_hIcon_Small = NULL;
 
     m_bFocused = FALSE;
-    m_bDelInDestructor = FALSE;
+    m_bDelInDestructor = TRUE;
+    m_bDesotryByWindow = TRUE;
   }
   CWndImpl::~CWndImpl() {
     if (NULL != m_hIcon_Big) {
@@ -26,7 +27,7 @@ namespace ui {
     }
 
     if (NULL != m_hWnd) {
-      m_bDelInDestructor = TRUE;
+      m_bDelInDestructor = FALSE;
       ::DestroyWindow(m_hWnd);
       m_hWnd = NULL;
     }
@@ -98,7 +99,7 @@ namespace ui {
         pThis->m_hWnd = NULL;
 
         //当窗口结束时，删除掉对象本身
-        if (!pThis->m_bDelInDestructor) {
+        if (pThis->m_bDelInDestructor && pThis->m_bDesotryByWindow) {
           delete pThis;
           pThis = NULL;
         }
@@ -171,5 +172,14 @@ namespace ui {
 
     return rcWindowX.PtInRectX(ptCurPos);
   }
+
+  BOOL CWndImpl::IsDesotryByWindow(void) {
+    return m_bDesotryByWindow;
+  }
+
+  void CWndImpl::SetDesotryByWindow(BOOL value) {
+    m_bDesotryByWindow = value;
+  }
+
 
 }
